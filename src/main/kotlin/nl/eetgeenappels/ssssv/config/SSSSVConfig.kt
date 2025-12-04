@@ -16,6 +16,7 @@ class SSSSVConfig: Config(ResourceLocation.parse("ssssv:ssssv_skibidi")) {
     var allowedBlocks: List<Block> = listOf()
     var holdShiftToVeinmine: Boolean = false
     var teleportItemsToPlayer: Boolean = false
+    var allowDiagonalVeinmine: Boolean = true
 
 
     override fun defaultPermLevel(): Int {

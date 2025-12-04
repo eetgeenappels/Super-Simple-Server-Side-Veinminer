@@ -37,8 +37,13 @@ object Veinminer {
         while (!queue.isEmpty() && blocksMined < Configs.ssssvConfig.veinmineMaxBlocks.get()) {
             val current: BlockPos = queue.poll()
 
-            for (direction in Direction.entries) {
-                val neighbor = current.relative(direction)
+            val neighbors = if (Configs.ssssvConfig.allowDiagonalVeinmine) {
+                getDiagonalNeighbours(current)
+            } else {
+                getDirectNeighbours(current)
+            }
+
+            for (neighbor in neighbors) {
 
                 if (!visited.contains(neighbor)) {
                     val neighborState = level.getBlockState(neighbor)
@@ -50,12 +55,16 @@ object Veinminer {
                                 withParameter(LootContextParams.THIS_ENTITY, player)
                                 withParameter(LootContextParams.TOOL, player.mainHandItem)
                                 withParameter(LootContextParams.BLOCK_STATE, blockState)
+                                withParameter(LootContextParams.ORIGIN, neighbor.center)
                                 if (blockEntity != null)
                                     withParameter(LootContextParams.BLOCK_ENTITY, blockEntity)
                             })
                             level.destroyBlock(neighbor, false)
                             for (item in drops) {
-                                player.inventory.add(item)
+                                val success = player.inventory.add(item)
+                                if (!success) {
+                                    player.drop(item, false)
+                                }
                             }
                         } else {
                             level.destroyBlock(neighbor, true)
@@ -68,6 +77,29 @@ object Veinminer {
             }
         }
 
+    }
+
+    fun getDirectNeighbours(blockPos: BlockPos): List<BlockPos> {
+        val neighbors = mutableListOf<BlockPos>()
+        for (direction in Direction.entries) {
+            val neighbor = blockPos.relative(direction)
+            neighbors.add(neighbor)
+        }
+        return neighbors
+    }
+
+    fun getDiagonalNeighbours(blockPos: BlockPos): List<BlockPos> {
+        val neighbors = mutableListOf<BlockPos>()
+        for (dx in -1..1) {
+            for (dy in -1..1) {
+                for (dz in -1..1) {
+                    if (dx == 0 && dy == 0 && dz == 0) continue
+                    val neighbor = blockPos.offset(dx, dy, dz)
+                    neighbors.add(neighbor)
+                }
+            }
+        }
+        return neighbors
     }
 
     fun canVeinmineBlock(block: Block): Boolean {
