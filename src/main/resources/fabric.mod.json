@@ -1,0 +1,51 @@
+{
+	"schemaVersion": 1,
+	"id": "ssssv",
+	"version": "${version}",
+	"name": "Super Simple Server Side Veinminer",
+	"description": "A highly configurable veinminer mod that runs on the server side.",
+	"authors": [
+		"eetgeenappels"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/eetgeenappels/Super-Simple-Server-Side-Veinminer"
+	},
+	"license": "LGPL-3.0",
+	"icon": "assets/ssssv/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			{
+				"value": "nl.eetgeenappels.ssssv.SuperSimpleServerSideVeinminer",
+				"adapter": "kotlin"
+			}
+		],
+		"client": [
+			{
+				"value": "nl.eetgeenappels.ssssv.SuperSimpleServerSideVeinminerClient",
+				"adapter": "kotlin"
+			}
+		]
+	},
+	"mixins": [
+		"ssssv.mixins.json",
+		{
+			"config": "ssssv.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.18.1",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*",
+		"fabric-language-kotlin": "*",
+		"fzzy_config": "*"
+	},
+	"custom": {
+		"fzzy_config": [
+			"ssssv"
+		]
+	}
+}
