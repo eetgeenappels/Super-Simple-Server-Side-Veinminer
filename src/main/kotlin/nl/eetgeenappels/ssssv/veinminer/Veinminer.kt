@@ -1,17 +1,14 @@
 package nl.eetgeenappels.ssssv.veinminer
 
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Direction
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.storage.loot.LootParams
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams
 import nl.eetgeenappels.ssssv.config.Configs
-import java.util.*
 
 object Veinminer {
 
@@ -21,88 +18,68 @@ object Veinminer {
             return
         if (level.isClientSide)
             return
-        val serverLevel = level as ServerLevel
+        if (level !is ServerLevel) {
+            return
+        }
         if (!canVeinmineBlock(blockState.block))
             return
         if (Configs.ssssvConfig.holdShiftToVeinmine && !player.isShiftKeyDown)
             return
 
-        val queue: Queue<BlockPos> = LinkedList()
-        val visited: MutableSet<BlockPos> = HashSet<BlockPos>()
-        var blocksMined = 0
+        val searchStrategy = Configs.ssssvConfig.searchSection.blockSearchMode.strategy
+        val blocksToMine = searchStrategy.search(
+            blockPos,
+            blockState.block,
+            level,
+            config.veinmineMaxBlocks.get()
+        )
 
-        queue.add(blockPos)
+        for (oreBlock in blocksToMine) {
 
-        // Breadth-first loop to remove connected tree blocks
-        while (!queue.isEmpty() && blocksMined < Configs.ssssvConfig.veinmineMaxBlocks.get()) {
-            val current: BlockPos = queue.poll()
+            if (oreBlock == blockPos)
+                continue // skip the original block, it's already being mined
 
-            val neighbors = if (Configs.ssssvConfig.allowDiagonalVeinmine) {
-                getDiagonalNeighbours(current)
-            } else {
-                getDirectNeighbours(current)
-            }
+            val state = level.getBlockState(oreBlock)
+            if (!canVeinmineBlock(state.block))
+                continue
 
-            for (neighbor in neighbors) {
-
-                if (!visited.contains(neighbor)) {
-                    val neighborState = level.getBlockState(neighbor)
-                    val neighborBlock = neighborState.block
-
-                    if (neighborBlock == blockState.block) {
-                        if (Configs.ssssvConfig.teleportItemsToPlayer) {
-                            val drops = neighborState.getDrops(LootParams.Builder(serverLevel).apply {
-                                withParameter(LootContextParams.THIS_ENTITY, player)
-                                withParameter(LootContextParams.TOOL, player.mainHandItem)
-                                withParameter(LootContextParams.BLOCK_STATE, blockState)
-                                withParameter(LootContextParams.ORIGIN, neighbor.center)
-                                if (blockEntity != null)
-                                    withParameter(LootContextParams.BLOCK_ENTITY, blockEntity)
-                            })
-                            level.destroyBlock(neighbor, false)
-                            for (item in drops) {
-                                val success = player.inventory.add(item)
-                                if (!success) {
-                                    player.drop(item, false)
-                                }
-                            }
-                        } else {
-                            level.destroyBlock(neighbor, true)
-                        }
-                        blocksMined++
-                        queue.add(neighbor)
-                        visited.add(neighbor)
-                    }
+            val drops = Block.getDrops(state, level, oreBlock, blockEntity)
+            for (itemStack in drops) {
+                if (Configs.ssssvConfig.teleportItemsToPlayer) {
+                    val droppedItem = player.drop(itemStack, false)
+                    droppedItem?.setPos(player.x, player.y + 0.5, player.z)
+                } else {
+                    Block.popResource(level, oreBlock, itemStack)
                 }
             }
+
+            // set block to air
+            level.setBlock(oreBlock, Blocks.AIR.defaultBlockState(), 3)
         }
 
-    }
 
-    fun getDirectNeighbours(blockPos: BlockPos): List<BlockPos> {
-        val neighbors = mutableListOf<BlockPos>()
-        for (direction in Direction.entries) {
-            val neighbor = blockPos.relative(direction)
-            neighbors.add(neighbor)
+        // apply durability and hunger cost
+        val durabilityCost = (blocksToMine.size - 1) * Configs.ssssvConfig.durabilityTakenPerBlock.get()
+        if (player.mainHandItem.isDamageableItem) {
+            player.mainHandItem.damageValue += durabilityCost.toInt()
         }
-        return neighbors
+        val hungerCost = (blocksToMine.size - 1) * Configs.ssssvConfig.hungerTakenPerBlock.get()
+        player.foodData.foodLevel -= hungerCost.toInt()
     }
-
-    fun getDiagonalNeighbours(blockPos: BlockPos): List<BlockPos> {
-        val neighbors = mutableListOf<BlockPos>()
-        for (dx in -1..1) {
-            for (dy in -1..1) {
-                for (dz in -1..1) {
-                    if (dx == 0 && dy == 0 && dz == 0) continue
-                    val neighbor = blockPos.offset(dx, dy, dz)
-                    neighbors.add(neighbor)
-                }
-            }
-        }
-        return neighbors
-    }
-
     fun canVeinmineBlock(block: Block): Boolean {
-        return Configs.ssssvConfig.allowedBlocks.contains(block)
+        return isInWhitelist(block) && !isInBlacklist(block);
+    }
+
+    fun isInWhitelist(block: Block): Boolean {
+        val config = Configs.ssssvConfig
+        if (!config.blocksSection.blocksWhitelistEnbabled)
+            return true
+        return config.blocksSection.blocksWhitelist.contains(block)
+    }
+    fun isInBlacklist(block: Block): Boolean {
+        val config = Configs.ssssvConfig
+        if (!config.blocksSection.blocksBlacklistEnabled)
+            return false
+        return config.blocksSection.blocsBlacklist.contains(block)
     }
 }
