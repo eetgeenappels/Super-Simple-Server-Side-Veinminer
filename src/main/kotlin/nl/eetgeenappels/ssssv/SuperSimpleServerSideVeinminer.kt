@@ -5,6 +5,7 @@ import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents
 import nl.eetgeenappels.ssssv.config.Configs
 import nl.eetgeenappels.ssssv.config.SSSSVConfig
+import nl.eetgeenappels.ssssv.config.SSSSVConfigCommand
 import nl.eetgeenappels.ssssv.veinminer.Veinminer
 import org.slf4j.LoggerFactory
 
@@ -20,6 +21,6 @@ object SuperSimpleServerSideVeinminer : ModInitializer {
 		})
 
 
-
+        SSSSVConfigCommand.init()
 	}
 }
