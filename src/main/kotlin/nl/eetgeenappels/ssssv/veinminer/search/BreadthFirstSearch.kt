@@ -28,8 +28,9 @@ class BreadthFirstSearch: SearchStrategy {
             val current = queue.poll()
             val state = level.getBlockState(current)
 
-            if (state.block == targetBlock) {
-                found.add(current)
+            if (state.block == targetBlock || current == startPos) {
+                if (current != startPos)
+                    found.add(current)
 
                 // use your diagonal toggle if needed
                 val neighbors = if (Configs.ssssvConfig.searchSection.allowDiagonalVeinmine) {

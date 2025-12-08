@@ -25,15 +25,15 @@ object BlockOutlineRenderer {
         poseStack!!.pushPose()
 
         RenderSystem.setShader { GameRenderer.getPositionColorShader() }
-        RenderSystem.lineWidth(5.0f)
-        RenderSystem.disableDepthTest()
+        RenderSystem.lineWidth(ClientConfigs.ssssvRenderConfig.renderPreviewLineWidth.get().toFloat())
         if (ClientConfigs.ssssvRenderConfig.renderPreviewThroughBlocks) {
             RenderSystem.disableDepthTest()
+            RenderSystem.disableBlend()
         } else {
             RenderSystem.enableDepthTest()
+            RenderSystem.enableBlend()
         }
         RenderSystem.disableCull()
-        RenderSystem.enableBlend()
         RenderSystem.defaultBlendFunc()
 
         val bufferBuilder = Tesselator.getInstance().begin(
@@ -52,11 +52,7 @@ object BlockOutlineRenderer {
         // Adjust coordinates relative to camera
 
 
-
-        val buffer = bufferBuilder.build()
-        if (buffer == null) {
-            return
-        }
+        val buffer = bufferBuilder.build() ?: return
 
         BufferUploader.drawWithShader(buffer)
 
@@ -85,10 +81,10 @@ object BlockOutlineRenderer {
         val maxY = (cube.maxY - camera.y).toFloat()
         val maxZ = (cube.maxZ - camera.z).toFloat()
 
-        val red = ClientConfigs.ssssvRenderConfig.renderPreviewColor.red
-        val green = ClientConfigs.ssssvRenderConfig.renderPreviewColor.green
-        val blue = ClientConfigs.ssssvRenderConfig.renderPreviewColor.blue
-        val alpha = ClientConfigs.ssssvRenderConfig.renderPreviewColor.alpha
+        val red = ClientConfigs.ssssvRenderConfig.renderPreviewColor.r()
+        val green = ClientConfigs.ssssvRenderConfig.renderPreviewColor.g()
+        val blue = ClientConfigs.ssssvRenderConfig.renderPreviewColor.b()
+        val alpha = ClientConfigs.ssssvRenderConfig.renderPreviewColor.a()
 
         // Bottom face (4 lines)
         bufferBuilder.addVertex(matrix, minX, minY, minZ).setColor(red, green, blue, alpha)

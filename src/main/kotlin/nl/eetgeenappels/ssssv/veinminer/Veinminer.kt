@@ -1,6 +1,7 @@
 package nl.eetgeenappels.ssssv.veinminer
 
 import net.minecraft.core.BlockPos
+import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
@@ -31,8 +32,8 @@ object Veinminer {
         val blocksToMine = searchStrategy.search(
             blockPos,
             blockState.block,
-            level,
-            config.veinmineMaxBlocks.get()
+            player.level(),
+            Configs.ssssvConfig.veinmineMaxBlocks.get()
         )
 
         SuperSimpleServerSideVeinminer.logger.info("Veinmine found ${blocksToMine.size} blocks to mine.")
@@ -43,8 +44,6 @@ object Veinminer {
                 continue // skip the original block, it's already being mined
 
             val state = level.getBlockState(oreBlock)
-            if (!canVeinmineBlock(state.block))
-                continue
 
             val drops = Block.getDrops(state, level, oreBlock, blockEntity)
             for (itemStack in drops) {
