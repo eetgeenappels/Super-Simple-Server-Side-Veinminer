@@ -1,4 +1,4 @@
-package nl.eetgeenappels.ssssv.mixin;
+package nl.eetgeenappels.ssssv.client.mixin;
 
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;

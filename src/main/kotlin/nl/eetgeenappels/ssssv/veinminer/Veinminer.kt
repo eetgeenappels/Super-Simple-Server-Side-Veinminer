@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
+import nl.eetgeenappels.ssssv.SuperSimpleServerSideVeinminer
 import nl.eetgeenappels.ssssv.config.Configs
 
 object Veinminer {
@@ -33,6 +34,8 @@ object Veinminer {
             level,
             config.veinmineMaxBlocks.get()
         )
+
+        SuperSimpleServerSideVeinminer.logger.info("Veinmine found ${blocksToMine.size} blocks to mine.")
 
         for (oreBlock in blocksToMine) {
 

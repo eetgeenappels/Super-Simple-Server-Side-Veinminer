@@ -5,5 +5,5 @@ import me.fzzyhmstrs.fzzy_config.api.RegisterType
 
 object Configs {
 
-    val ssssvConfig = ConfigApi.registerAndLoadConfig(::SSSSVConfig, RegisterType.CLIENT)
+    val ssssvConfig = ConfigApi.registerAndLoadConfig(::SSSSVConfig, RegisterType.BOTH)
 }

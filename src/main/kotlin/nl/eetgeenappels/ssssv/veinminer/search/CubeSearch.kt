@@ -8,7 +8,7 @@ import kotlin.math.cbrt
 class CubeSearch: SearchStrategy {
     override fun search(startPos: BlockPos, targetBlock: Block, level: Level, maxBlocks: Int): List<BlockPos> {
         val found = mutableListOf<BlockPos>()
-        val range = cbrt(maxBlocks.toDouble()).toInt()
+        val range = cbrt(maxBlocks.toDouble()).toInt()/2
         for (x in -range..range) {
             for (y in -range..range) {
                 for (z in -range..range) {

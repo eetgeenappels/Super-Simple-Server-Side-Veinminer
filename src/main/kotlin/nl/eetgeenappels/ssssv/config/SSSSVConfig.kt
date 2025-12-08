@@ -8,7 +8,6 @@ import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedFloat
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.level.block.Block
-import nl.eetgeenappels.ssssv.SuperSimpleServerSideVeinminer
 import nl.eetgeenappels.ssssv.veinminer.search.SearchStrategies
 
 class SSSSVConfig: Config(ResourceLocation.parse("ssssv:ssssv_skibidi")) {
@@ -44,7 +43,7 @@ class SSSSVConfig: Config(ResourceLocation.parse("ssssv:ssssv_skibidi")) {
     }
 
     override fun fileType(): FileType {
-        return FileType.JSON5
+        return FileType.TOML
     }
 
     override fun saveType(): SaveType {

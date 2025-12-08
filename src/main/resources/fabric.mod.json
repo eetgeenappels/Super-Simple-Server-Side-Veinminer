@@ -23,17 +23,13 @@
 		],
 		"client": [
 			{
-				"value": "nl.eetgeenappels.ssssv.SuperSimpleServerSideVeinminerClient",
+				"value": "nl.eetgeenappels.ssssv.client.SuperSimpleServerSideVeinminerClient",
 				"adapter": "kotlin"
 			}
 		]
 	},
 	"mixins": [
-		"ssssv.mixins.json",
-		{
-			"config": "ssssv.client.mixins.json",
-			"environment": "client"
-		}
+		"ssssv.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.18.1",

@@ -9,6 +9,7 @@ import net.minecraft.commands.Commands.*
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import nl.eetgeenappels.ssssv.veinminer.search.SearchStrategies
 
@@ -154,9 +155,9 @@ object SSSSVConfigCommand {
 
     private fun blockListCommand(
         name: String,
-        listGetter: () -> MutableList<net.minecraft.world.level.block.Block>,
-        add: (MutableList<net.minecraft.world.level.block.Block>, net.minecraft.world.level.block.Block) -> Unit,
-        remove: (MutableList<net.minecraft.world.level.block.Block>, net.minecraft.world.level.block.Block) -> Unit
+        listGetter: () -> MutableList<Block>,
+        add: (MutableList<Block>, Block) -> Unit,
+        remove: (MutableList<Block>, Block) -> Unit
     ) = literal(name)
         .then(
             literal("add")
@@ -203,8 +204,8 @@ object SSSSVConfigCommand {
 
     private fun resolveBlockOrFail(
         ctx: CommandContext<CommandSourceStack>,
-        listGetter: () -> MutableList<net.minecraft.world.level.block.Block>
-    ): Pair<net.minecraft.world.level.block.Block, MutableList<net.minecraft.world.level.block.Block>>? {
+        listGetter: () -> MutableList<Block>
+    ): Pair<Block, MutableList<Block>>? {
 
         val name = StringArgumentType.getString(ctx, "block")
         val block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(name))

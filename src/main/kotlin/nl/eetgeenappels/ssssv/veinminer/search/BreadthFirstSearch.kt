@@ -4,7 +4,6 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Direction
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.state.BlockState
 import nl.eetgeenappels.ssssv.config.Configs
 import java.util.LinkedList
 import java.util.Queue
@@ -22,6 +21,8 @@ class BreadthFirstSearch: SearchStrategy {
 
         queue.add(startPos)
         visited.add(startPos)
+
+
 
         while (queue.isNotEmpty() && found.size < maxBlocks) {
             val current = queue.poll()
