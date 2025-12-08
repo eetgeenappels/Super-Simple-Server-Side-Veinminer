@@ -220,11 +220,11 @@ object SSSSVConfigCommand {
         val name = StringArgumentType.getString(ctx, "block")
         val block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(name))
 
-        if (block == Blocks.AIR) {
+        if (block.isEmpty) {
             ctx.source.sendFailure(Component.literal("Block '$name' not found"))
             return null
         }
 
-        return block
+        return block.get().value()
     }
 }

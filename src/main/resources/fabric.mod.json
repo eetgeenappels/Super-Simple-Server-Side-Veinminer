@@ -12,7 +12,7 @@
 		"sources": "https://github.com/eetgeenappels/Super-Simple-Server-Side-Veinminer"
 	},
 	"license": "LGPL-3.0",
-	"icon": "assets/ssssv/icon.png",
+	"icon": "assets/ssssv/ssssv.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
@@ -29,11 +29,14 @@
 		]
 	},
 	"mixins": [
-		"ssssv.mixins.json"
+		"ssssv.mixins.json",
+      {
+        "client": "ssssv.client.mixins.json"
+      }
 	],
 	"depends": {
 		"fabricloader": ">=0.18.1",
-		"minecraft": "~1.21.1",
+		"minecraft": "~1.21.10",
 		"java": ">=21",
 		"fabric-api": "*",
 		"fabric-language-kotlin": "*",
