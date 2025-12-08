@@ -98,16 +98,20 @@ object SSSSVConfigCommand {
                     // Blocks (whitelist & blacklist)
                     .then(
                         literal("blocks")
+                            .then(booleanCommand("enable_whitelist") {
+                                Configs.ssssvConfig.blocksSection.blocksWhitelistEnbabled = it
+                            })
+                            .then(booleanCommand("enable_blacklist") {
+                                Configs.ssssvConfig.blocksSection.blocksBlacklistEnabled = it
+                            })
                             .then(blockListCommand("whitelist",
-                                { Configs.ssssvConfig.blocksSection.blocksWhitelist.toMutableList() },
-                                { list, block -> list += block },
-                                { list, block -> list -= block }
+                                { Configs.ssssvConfig.blocksSection.blocksWhitelist },
+                                { Configs.ssssvConfig.blocksSection.blocksWhitelist = it }
                             ))
 
                             .then(blockListCommand("blacklist",
-                                { Configs.ssssvConfig.blocksSection.blocsBlacklist.toMutableList() },
-                                { list, block -> list += block },
-                                { list, block -> list -= block }
+                                { Configs.ssssvConfig.blocksSection.blocsBlacklist },
+                                { Configs.ssssvConfig.blocksSection.blocsBlacklist = it }
                             ))
                     )
             )
@@ -155,20 +159,21 @@ object SSSSVConfigCommand {
 
     private fun blockListCommand(
         name: String,
-        listGetter: () -> MutableList<Block>,
-        add: (MutableList<Block>, Block) -> Unit,
-        remove: (MutableList<Block>, Block) -> Unit
+        listGetter: () -> List<Block>,
+        listSetter: (List<Block>) -> Unit
     ) = literal(name)
         .then(
             literal("add")
                 .then(argument("block", StringArgumentType.string())
                     .executes { ctx ->
-                        val (block, list) = resolveBlockOrFail(ctx, listGetter) ?: return@executes 1
+                        val block = resolveBlockOrFail(ctx) ?: return@executes 1
+                        val list = listGetter().toMutableList()
 
                         if (block in list) {
                             ctx.source.sendFailure(Component.literal("Block already in $name"))
                         } else {
-                            add(list, block)
+                            list.add(block)
+                            listSetter(list)
                             ctx.source.sendSystemMessage(Component.literal("Added block: ${StringArgumentType.getString(ctx, "block")}"))
                         }
                         1
@@ -179,10 +184,12 @@ object SSSSVConfigCommand {
             literal("remove")
                 .then(argument("block", StringArgumentType.string())
                     .executes { ctx ->
-                        val (block, list) = resolveBlockOrFail(ctx, listGetter) ?: return@executes 1
+                        val block = resolveBlockOrFail(ctx) ?: return@executes 1
+                        val list = listGetter().toMutableList()
 
                         if (block in list) {
-                            remove(list, block)
+                            list.remove(block)
+                            listSetter(list)
                             ctx.source.sendSystemMessage(Component.literal("Removed block"))
                         } else {
                             ctx.source.sendFailure(Component.literal("Block not found in $name"))
@@ -194,8 +201,13 @@ object SSSSVConfigCommand {
         .then(
             literal("list")
                 .executes { ctx ->
-                    val msg = listGetter().joinToString(", ") {
-                        BuiltInRegistries.BLOCK.getId(it).toString()
+                    val list = listGetter()
+                    val msg = if (list.isEmpty()) {
+                        "List is empty"
+                    } else {
+                        list.joinToString(", ") {
+                            BuiltInRegistries.BLOCK.getKey(it).toString()
+                        }
                     }
                     ctx.source.sendSystemMessage(Component.literal(msg))
                     1
@@ -203,10 +215,8 @@ object SSSSVConfigCommand {
         )
 
     private fun resolveBlockOrFail(
-        ctx: CommandContext<CommandSourceStack>,
-        listGetter: () -> MutableList<Block>
-    ): Pair<Block, MutableList<Block>>? {
-
+        ctx: CommandContext<CommandSourceStack>
+    ): Block? {
         val name = StringArgumentType.getString(ctx, "block")
         val block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(name))
 
@@ -215,6 +225,6 @@ object SSSSVConfigCommand {
             return null
         }
 
-        return block to listGetter()
+        return block
     }
 }

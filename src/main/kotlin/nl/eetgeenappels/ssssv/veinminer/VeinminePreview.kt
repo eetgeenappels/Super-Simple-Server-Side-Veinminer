@@ -18,8 +18,6 @@ object VeinminePreview {
 
     fun onPlayerTick(player: Player) {
 
-        return
-
         // check if is not client side
         if (player.level().isClientSide) {
             return
