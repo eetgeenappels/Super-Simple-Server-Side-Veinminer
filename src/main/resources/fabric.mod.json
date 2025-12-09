@@ -9,10 +9,12 @@
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/eetgeenappels/Super-Simple-Server-Side-Veinminer"
+		"sources": "https://github.com/eetgeenappels/Super-Simple-Server-Side-Veinminer",
+		"issues": "https://github.com/eetgeenappels/Super-Simple-Server-Side-Veinminer/issues",
+		"modrinth": "https://modrinth.com/project/super-simple-server-side-veinminer"
 	},
 	"license": "LGPL-3.0",
-	"icon": "assets/ssssv/icon.png",
+	"icon": "assets/ssssv/ssssv.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
