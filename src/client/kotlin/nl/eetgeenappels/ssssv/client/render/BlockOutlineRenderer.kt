@@ -13,6 +13,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.Shapes
 import net.minecraft.world.phys.shapes.VoxelShape
 import nl.eetgeenappels.ssssv.client.SuperSimpleServerSideVeinminerClient
+import nl.eetgeenappels.ssssv.client.config.ClientConfigs
 import org.joml.Matrix4f
 import java.util.*
 
@@ -71,9 +72,7 @@ object BlockOutlineRenderer {
 
         val matrix = stack.last().pose()
 
-        val voxelShape = setShape(SuperSimpleServerSideVeinminerClient.cubes, camPos)
-
-        renderBlocks(source, renderHighlighting, matrix, voxelShape, 255)
+        renderBlocks(source, renderHighlighting, matrix, SuperSimpleServerSideVeinminerClient.cubes, camPos)
 
 
         // Force draw the lines immediately
@@ -84,44 +83,70 @@ object BlockOutlineRenderer {
         stack.popPose()
     }
 
-    private fun renderBlocks(source: MultiBufferSource.BufferSource, renderer: RenderType, matrix: Matrix4f, shape: VoxelShape, transparency: Int) {
+
+    // Render blocks directly without using VoxelShape edges
+    private fun renderBlocks(
+        source: MultiBufferSource.BufferSource,
+        renderer: RenderType,
+        matrix: Matrix4f,
+        positions: List<BlockPos>,
+        camPos: Vec3
+    ) {
         val buffer = source.getBuffer(renderer)
-        shape.forAllEdges { x, y, z, dx, dy, dz ->
-            val x = x.toFloat()
-            val y = y.toFloat()
-            val z = z.toFloat()
-            val dx = dx.toFloat()
-            val dy = dy.toFloat()
-            val dz = dz.toFloat()
-            val relX = dx - x
-            val relY = dy - y
-            val relZ = dz - z
 
-            // Outline
-            buffer.addVertex(matrix, x, y, z)
-                .setColor(255, 255, 255, transparency)
-                .setNormal(relX, relY, relZ)
-            buffer.addVertex(matrix, dx, dy, dz)
-                .setColor(255, 255, 255, transparency)
-                .setNormal(relX, relY, relZ)
+        // Define the 12 edges of a cube once
+        val edges = arrayOf(
+            // Bottom face
+            floatArrayOf(0f, 0f, 0f, 1f, 0f, 0f),
+            floatArrayOf(1f, 0f, 0f, 1f, 0f, 1f),
+            floatArrayOf(1f, 0f, 1f, 0f, 0f, 1f),
+            floatArrayOf(0f, 0f, 1f, 0f, 0f, 0f),
+            // Top face
+            floatArrayOf(0f, 1f, 0f, 1f, 1f, 0f),
+            floatArrayOf(1f, 1f, 0f, 1f, 1f, 1f),
+            floatArrayOf(1f, 1f, 1f, 0f, 1f, 1f),
+            floatArrayOf(0f, 1f, 1f, 0f, 1f, 0f),
+            // Vertical edges
+            floatArrayOf(0f, 0f, 0f, 0f, 1f, 0f),
+            floatArrayOf(1f, 0f, 0f, 1f, 1f, 0f),
+            floatArrayOf(1f, 0f, 1f, 1f, 1f, 1f),
+            floatArrayOf(0f, 0f, 1f, 0f, 1f, 1f)
+        )
+
+        // Render each block's outline
+        for (pos in positions) {
+            val offsetX = (pos.x - camPos.x).toFloat()
+            val offsetY = (pos.y - camPos.y).toFloat()
+            val offsetZ = (pos.z - camPos.z).toFloat()
+
+            // Draw all 12 edges
+            for (edge in edges) {
+                val x1 = edge[0] - 0.01f + offsetX
+                val y1 = edge[1] - 0.01f + offsetY
+                val z1 = edge[2] - 0.01f + offsetZ
+                val x2 = edge[3] + 0.01f + offsetX
+                val y2 = edge[4] + 0.01f + offsetY
+                val z2 = edge[5] + 0.01f + offsetZ
+
+                val relX = x2 - x1
+                val relY = y2 - y1
+                val relZ = z2 - z1
+
+                buffer.addVertex(matrix, x1, y1, z1)
+                    .setColor(ClientConfigs.ssssvRenderConfig.renderPreviewColor.r(),
+                        ClientConfigs.ssssvRenderConfig.renderPreviewColor.g(),
+                        ClientConfigs.ssssvRenderConfig.renderPreviewColor.b(),
+                        ClientConfigs.ssssvRenderConfig.renderPreviewColor.a())
+                    .setNormal(relX, relY, relZ)
+                buffer.addVertex(matrix, x2, y2, z2)
+                    .setColor(ClientConfigs.ssssvRenderConfig.renderPreviewColor.r(),
+                        ClientConfigs.ssssvRenderConfig.renderPreviewColor.g(),
+                        ClientConfigs.ssssvRenderConfig.renderPreviewColor.b(),
+                        ClientConfigs.ssssvRenderConfig.renderPreviewColor.a())
+                    .setNormal(relX, relY, relZ)
+            }
         }
+
         source.endLastBatch()
-    }
-
-    fun setShape(positions: List<BlockPos>, camPos: Vec3): VoxelShape {
-        if (positions.isEmpty()) {
-            return Shapes.empty()
-        }
-
-        val splines = positions.map {
-            val box = Shapes.box(-0.010, -0.010, -0.010, 1.010, 1.010, 1.010) // Outline
-            //val box = Shapes.box(0.35, 0.35, 0.35, 0.65, 0.65, 0.65) // Inline Box (more clutter)
-            val dx = it.x - camPos.x
-            val dy = it.y - camPos.y
-            val dz = it.z - camPos.z
-            if (dx.toInt() == 0 && dy.toInt() == 0 && dz.toInt() == 0) box
-            else box.move(dx, dy, dz)
-        }
-        return Shapes.or(splines.first(), *splines.toTypedArray())
     }
 }
