@@ -3,7 +3,8 @@
   "package": "nl.eetgeenappels.ssssv.client.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "LevelRendererMixin"
+    "LevelRendererMixin",
+    "RenderTypeAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -23,7 +23,7 @@ object VeinminePreview {
             return
         }
 
-        var blocks = emptyList<BlockPos>()
+        val blocks = mutableListOf<BlockPos>()
 
         val targetedBlock = getTargetedBlock(player, 5.0)
         if (targetedBlock != null) {
@@ -32,12 +32,13 @@ object VeinminePreview {
                 // Here you can add code to highlight the block at blockPos
                 // For example, send a packet to the client to render a highlight
                 val searchStrategy = Configs.ssssvConfig.searchSection.blockSearchMode.strategy
-                blocks = searchStrategy.search(
+                blocks.addAll (searchStrategy.search(
                     blockPos,
                     player.level().getBlockState(blockPos).block,
                     player.level(),
                     Configs.ssssvConfig.veinmineMaxBlocks.get()
-                )
+                ))
+                blocks.add(blockPos)
 
             }
         }

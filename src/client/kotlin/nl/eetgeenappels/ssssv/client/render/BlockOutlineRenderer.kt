@@ -1,15 +1,18 @@
 package nl.eetgeenappels.ssssv.client.render
 
-import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.pipeline.BlendFunction
+import com.mojang.blaze3d.pipeline.RenderPipeline
 import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.client.Minecraft
 import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.RenderPipelines
 import net.minecraft.client.renderer.rendertype.RenderSetup
 import net.minecraft.client.renderer.rendertype.RenderType
-import net.minecraft.client.renderer.rendertype.RenderTypes
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.Vec3
 import nl.eetgeenappels.ssssv.client.SuperSimpleServerSideVeinminerClient
 import nl.eetgeenappels.ssssv.client.config.ClientConfigs
+import nl.eetgeenappels.ssssv.client.mixin.RenderTypeAccessor
 import org.joml.Matrix4f
 
 // credit goes to the Veinminer mod's highlight renderer is still don't understand how rendering works D:
@@ -20,17 +23,41 @@ object BlockOutlineRenderer {
      * RenderType.create(namespace, bufferSize, pipeline, state)
      */
 
+    // create render type
+    val renderType: RenderType
+        get() = RenderTypeAccessor.callCreate("outline_lines", RenderSetup.builder(
+            RenderPipeline.builder(*arrayOf(RenderPipelines.LINES_SNIPPET))
+                .withoutBlend()
+                .withLocation("pipeline/lines").build())
+            .createRenderSetup());
+
+
     // OrderedSubmitNodeCollector
     fun render(stack: PoseStack,
                source: MultiBufferSource.BufferSource,
                camPos: Vec3,
                isTranslucentPass: Boolean) {
 
+        if (SuperSimpleServerSideVeinminerClient.cubes.isEmpty())
+            return
+
+        if (!ClientConfigs.ssssvRenderConfig.previewsEnabled)
+            return
+
+        if (ClientConfigs.ssssvRenderConfig.holdShiftToPreview) {
+            val minecraft = Minecraft.getInstance()
+            val player = minecraft.player ?: return
+            if (!player.isShiftKeyDown) {
+                return
+            }
+        }
+
+
         stack.pushPose()
 
         val matrix = stack.last().pose()
 
-        renderBlocks(source, RenderTypes.LINES_TRANSLUCENT, matrix, SuperSimpleServerSideVeinminerClient.cubes, camPos)
+        renderBlocks(source, renderType, matrix, SuperSimpleServerSideVeinminerClient.cubes, camPos)
 
         // Force draw the lines immediately
         if (!isTranslucentPass) {

@@ -12,9 +12,9 @@ import java.awt.Color
 class SSSSVRenderConfig: Config(Identifier.parse("ssssv:ssssv_render_config")) {
 
     var renderPreviewColor: ValidatedColor = ValidatedColor(0, 255, 0, 100)
-    var renderPreviewThroughBlocks: Boolean = true
-    var renderPreviewLineWidth: ValidatedFloat = ValidatedFloat(0F, 20F, 0F)
-
+    var renderPreviewLineWidth: ValidatedFloat = ValidatedFloat(5F, 20F, 0F)
+    var previewsEnabled: Boolean = true
+    var holdShiftToPreview: Boolean = true
 
     override fun fileType(): FileType {
         return FileType.TOML

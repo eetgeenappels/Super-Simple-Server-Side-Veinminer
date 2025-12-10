@@ -14,9 +14,9 @@ class SSSSVConfig: Config(Identifier.parse("ssssv:ssssv_skibidi")) {
 
 
     var veinmineEnabled: Boolean = true
-    var veinmineMaxBlocks: ValidatedInt = ValidatedInt(64, 256, 1)
-    var holdShiftToVeinmine: Boolean = false
-    var teleportItemsToPlayer: Boolean = false
+    var veinmineMaxBlocks: ValidatedInt = ValidatedInt(32, 256, 1)
+    var holdShiftToVeinmine: Boolean = true
+    var teleportItemsToPlayer: Boolean = true
     var durabilityTakenPerBlock: ValidatedFloat = ValidatedFloat(1.0f, 2.0f, 0.0f)
     var hungerTakenPerBlock: ValidatedFloat = ValidatedFloat(0.1f, 1.0f, 0.0f)
 
