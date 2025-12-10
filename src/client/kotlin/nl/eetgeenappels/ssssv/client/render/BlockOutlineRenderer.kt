@@ -3,6 +3,7 @@ package nl.eetgeenappels.ssssv.client.render
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.rendertype.RenderSetup
 import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.client.renderer.rendertype.RenderTypes
 import net.minecraft.core.BlockPos
@@ -33,7 +34,7 @@ object BlockOutlineRenderer {
 
         // Force draw the lines immediately
         if (!isTranslucentPass) {
-            source.endBatch(RenderTypes.LINES_TRANSLUCENT)
+            source.endBatch()
         }
 
         stack.popPose()
@@ -77,12 +78,12 @@ object BlockOutlineRenderer {
 
             // Draw all 12 edges
             for (edge in edges) {
-                val x1 = edge[0] - 0.01f + offsetX
-                val y1 = edge[1] - 0.01f + offsetY
-                val z1 = edge[2] - 0.01f + offsetZ
-                val x2 = edge[3] + 0.01f + offsetX
-                val y2 = edge[4] + 0.01f + offsetY
-                val z2 = edge[5] + 0.01f + offsetZ
+                val x1 = edge[0]  + offsetX
+                val y1 = edge[1]  + offsetY
+                val z1 = edge[2]  + offsetZ
+                val x2 = edge[3] + offsetX
+                val y2 = edge[4] + offsetY
+                val z2 = edge[5] + offsetZ
 
                 val relX = x2 - x1
                 val relY = y2 - y1
