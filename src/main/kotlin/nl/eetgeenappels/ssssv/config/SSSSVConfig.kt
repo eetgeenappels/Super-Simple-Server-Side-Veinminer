@@ -6,11 +6,11 @@ import me.fzzyhmstrs.fzzy_config.config.Config
 import me.fzzyhmstrs.fzzy_config.config.ConfigSection
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedFloat
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.world.level.block.Block
 import nl.eetgeenappels.ssssv.veinminer.search.SearchStrategies
 
-class SSSSVConfig: Config(ResourceLocation.parse("ssssv:ssssv_skibidi")) {
+class SSSSVConfig: Config(Identifier.parse("ssssv:ssssv_skibidi")) {
 
 
     var veinmineEnabled: Boolean = true

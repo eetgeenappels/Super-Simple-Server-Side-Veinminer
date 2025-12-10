@@ -1,21 +1,15 @@
 package nl.eetgeenappels.ssssv.client.render
 
-import com.mojang.blaze3d.pipeline.RenderPipeline
-import com.mojang.blaze3d.platform.DepthTestFunction
+import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.vertex.PoseStack
 import net.minecraft.client.renderer.MultiBufferSource
-import net.minecraft.client.renderer.RenderPipelines
-import net.minecraft.client.renderer.RenderStateShard
-import net.minecraft.client.renderer.RenderType
+import net.minecraft.client.renderer.rendertype.RenderType
+import net.minecraft.client.renderer.rendertype.RenderTypes
 import net.minecraft.core.BlockPos
-import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.phys.Vec3
-import net.minecraft.world.phys.shapes.Shapes
-import net.minecraft.world.phys.shapes.VoxelShape
 import nl.eetgeenappels.ssssv.client.SuperSimpleServerSideVeinminerClient
 import nl.eetgeenappels.ssssv.client.config.ClientConfigs
 import org.joml.Matrix4f
-import java.util.*
 
 // credit goes to the Veinminer mod's highlight renderer is still don't understand how rendering works D:
 object BlockOutlineRenderer {
@@ -24,43 +18,6 @@ object BlockOutlineRenderer {
      *
      * RenderType.create(namespace, bufferSize, pipeline, state)
      */
-    private val renderHighlighting
-        get() = RenderType.create(
-            "ssssv:outline",
-            512,
-            RenderPipelines.register(
-                RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
-                    .withLocation(ResourceLocation.fromNamespaceAndPath("ssssv", "pipeline/outline"))
-                    .withDepthWrite(false)
-                    .withCull(false)
-                    .withColorWrite(true, true)
-                    .build()
-            ),
-            RenderType.CompositeState.builder()
-                .setLineState(RenderStateShard.LineStateShard(OptionalDouble.of(1.0)))
-                .setLayeringState(RenderStateShard.LayeringStateShard.NO_LAYERING)
-                .createCompositeState(false)
-        )
-
-    private val renderHighlightingTranslucent
-        get() = RenderType.create(
-            "ssssv:highlight_translucent",
-            512,
-            RenderPipelines.register(
-                RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
-                    .withLocation(ResourceLocation.fromNamespaceAndPath("veinminer-client", "pipeline/highlight_translucent"))
-                    .withDepthWrite(true)
-                    .withCull(false)
-                    .withColorWrite(true, true)
-                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST) // Render always on top
-                    .build()
-            ),
-            RenderType.CompositeState.builder()
-                .setLineState(RenderStateShard.LineStateShard(OptionalDouble.of(1.0)))
-                .setLayeringState(RenderStateShard.LayeringStateShard.NO_LAYERING)
-                .createCompositeState(false)
-        )
-
 
     // OrderedSubmitNodeCollector
     fun render(stack: PoseStack,
@@ -72,12 +29,11 @@ object BlockOutlineRenderer {
 
         val matrix = stack.last().pose()
 
-        renderBlocks(source, renderHighlighting, matrix, SuperSimpleServerSideVeinminerClient.cubes, camPos)
-
+        renderBlocks(source, RenderTypes.LINES_TRANSLUCENT, matrix, SuperSimpleServerSideVeinminerClient.cubes, camPos)
 
         // Force draw the lines immediately
         if (!isTranslucentPass) {
-            source.endBatch(renderHighlighting)
+            source.endBatch(RenderTypes.LINES_TRANSLUCENT)
         }
 
         stack.popPose()
@@ -137,12 +93,14 @@ object BlockOutlineRenderer {
                         ClientConfigs.ssssvRenderConfig.renderPreviewColor.g(),
                         ClientConfigs.ssssvRenderConfig.renderPreviewColor.b(),
                         ClientConfigs.ssssvRenderConfig.renderPreviewColor.a())
+                    .setLineWidth(ClientConfigs.ssssvRenderConfig.renderPreviewLineWidth.get())
                     .setNormal(relX, relY, relZ)
                 buffer.addVertex(matrix, x2, y2, z2)
                     .setColor(ClientConfigs.ssssvRenderConfig.renderPreviewColor.r(),
                         ClientConfigs.ssssvRenderConfig.renderPreviewColor.g(),
                         ClientConfigs.ssssvRenderConfig.renderPreviewColor.b(),
                         ClientConfigs.ssssvRenderConfig.renderPreviewColor.a())
+                    .setLineWidth(ClientConfigs.ssssvRenderConfig.renderPreviewLineWidth.get())
                     .setNormal(relX, relY, relZ)
             }
         }

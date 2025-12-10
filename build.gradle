@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version "${loom_version}"
+	id 'fabric-loom' version "1.13-SNAPSHOT"
 	id 'maven-publish'
 	id "org.jetbrains.kotlin.jvm" version "2.2.21"
 }
@@ -45,7 +45,7 @@ dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings loom.layered {
 		officialMojangMappings()
-		parchment "org.parchmentmc.data:parchment-${project.minecraft_version}:${project.parchment_version}@zip"
+		//parchment "org.parchmentmc.data:parchment-${project.minecraft_version}:${project.parchment_version}@zip"
 	}
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 

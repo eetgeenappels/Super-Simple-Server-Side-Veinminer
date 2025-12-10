@@ -8,7 +8,8 @@ import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands.*
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
+import net.minecraft.server.permissions.Permissions
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import nl.eetgeenappels.ssssv.veinminer.search.SearchStrategies
@@ -20,7 +21,7 @@ object SSSSVConfigCommand {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.register(
                 literal("ssssv_config")
-                    .requires { it.hasPermission(2) }
+                    .requires { it.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) }
 
                     // Simple boolean toggles
                     .then(booleanCommand("veinmine_enabled") {
@@ -218,7 +219,7 @@ object SSSSVConfigCommand {
         ctx: CommandContext<CommandSourceStack>
     ): Block? {
         val name = StringArgumentType.getString(ctx, "block")
-        val block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(name))
+        val block = BuiltInRegistries.BLOCK.get(Identifier.parse(name))
 
         if (block.isEmpty) {
             ctx.source.sendFailure(Component.literal("Block '$name' not found"))
