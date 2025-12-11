@@ -25,16 +25,26 @@ object SSSSVConfigCommand {
 
                     // Simple boolean toggles
                     .then(booleanCommand("veinmine_enabled") {
-                        Configs.ssssvConfig.veinmineEnabled = it
+                        Configs.ssssvConfig.veinmineEnabled.validateAndSet(it)
                     })
 
                     .then(booleanCommand("hold_shift_to_veinmine") {
-                        Configs.ssssvConfig.holdShiftToVeinmine = it
+                        Configs.ssssvConfig.holdShiftToVeinmine.validateAndSet(it)
                     })
 
-                    .then(booleanCommand("teleport_items_to_player") {
-                        Configs.ssssvConfig.teleportItemsToPlayer = it
-                    })
+                    .then(argument("collectionMode", StringArgumentType.string())
+                        .executes { ctx ->
+                            val name = StringArgumentType.getString(ctx, "collectionMode")
+                            val new = SSSSVConfig.CollectionModes.fromString(name)
+                            if (new != null) {
+                                Configs.ssssvConfig.collectionMode = new
+                                ctx.source.sendSystemMessage(Component.literal("Set collection mode to: $name"))
+                            } else {
+                                ctx.source.sendFailure(Component.literal("Collection mode '$name' not found"))
+                            }
+                            1
+                        }
+                    )
 
                     // Float configs
                     .then(floatCommand("durability_per_block", 0f, 2f) {
@@ -72,7 +82,7 @@ object SSSSVConfigCommand {
                                             val name = StringArgumentType.getString(ctx, "mode")
                                             val new = SearchStrategies.fromString(name)
                                             if (new != null) {
-                                                Configs.ssssvConfig.searchSection.blockSearchMode = new
+                                                Configs.ssssvConfig.blockSearchMode = new
                                                 ctx.source.sendSystemMessage(Component.literal("Set search mode to: $name"))
                                             } else {
                                                 ctx.source.sendFailure(Component.literal("Search mode '$name' not found"))
@@ -91,7 +101,7 @@ object SSSSVConfigCommand {
                             )
                             .then(
                                 booleanCommand("allow_diagonal") {
-                                    Configs.ssssvConfig.searchSection.allowDiagonalVeinmine = it
+                                    Configs.ssssvConfig.allowDiagonalVeinmine.validateAndSet(it)
                                 }
                             )
                     )
@@ -100,19 +110,18 @@ object SSSSVConfigCommand {
                     .then(
                         literal("blocks")
                             .then(booleanCommand("enable_whitelist") {
-                                Configs.ssssvConfig.blocksSection.blocksWhitelistEnbabled = it
+                                Configs.ssssvConfig.blocksWhitelistEnbabled.validateAndSet(it)
                             })
                             .then(booleanCommand("enable_blacklist") {
-                                Configs.ssssvConfig.blocksSection.blocksBlacklistEnabled = it
+                                Configs.ssssvConfig.blocksBlacklistEnabled = it
                             })
                             .then(blockListCommand("whitelist",
-                                { Configs.ssssvConfig.blocksSection.blocksWhitelist },
-                                { Configs.ssssvConfig.blocksSection.blocksWhitelist = it }
+                                { Configs.ssssvConfig.blocksWhitelist.get() },
+                                { Configs.ssssvConfig.blocksWhitelist.validateAndSet(it)}
                             ))
-
                             .then(blockListCommand("blacklist",
-                                { Configs.ssssvConfig.blocksSection.blocsBlacklist },
-                                { Configs.ssssvConfig.blocksSection.blocsBlacklist = it }
+                                { Configs.ssssvConfig.blocksBlacklist.get() },
+                                { Configs.ssssvConfig.blocksBlacklist.validateAndSet(it) }
                             ))
                     )
             )

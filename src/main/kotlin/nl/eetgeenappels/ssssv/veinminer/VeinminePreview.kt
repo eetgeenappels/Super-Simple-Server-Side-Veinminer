@@ -31,7 +31,7 @@ object VeinminePreview {
                 val blockPos = targetedBlock.blockPos
                 // Here you can add code to highlight the block at blockPos
                 // For example, send a packet to the client to render a highlight
-                val searchStrategy = Configs.ssssvConfig.searchSection.blockSearchMode.strategy
+                val searchStrategy = Configs.ssssvConfig.blockSearchMode.strategy
                 blocks.addAll (searchStrategy.search(
                     blockPos,
                     player.level().getBlockState(blockPos).block,

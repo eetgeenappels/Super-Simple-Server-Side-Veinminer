@@ -33,7 +33,7 @@ class BreadthFirstSearch: SearchStrategy {
                     found.add(current)
 
                 // use your diagonal toggle if needed
-                val neighbors = if (Configs.ssssvConfig.searchSection.allowDiagonalVeinmine) {
+                val neighbors = if (Configs.ssssvConfig.allowDiagonalVeinmine.get()) {
                     getDiagonalNeighbours(current)
                 } else {
                     getDirectNeighbours(current)
