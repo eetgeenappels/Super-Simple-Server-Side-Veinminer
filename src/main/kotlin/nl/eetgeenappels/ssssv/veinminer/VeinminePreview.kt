@@ -12,6 +12,7 @@ import nl.eetgeenappels.ssssv.config.Configs
 import nl.eetgeenappels.ssssv.config.SSSSVConfig
 import nl.eetgeenappels.ssssv.network.NetworkHandler
 import nl.eetgeenappels.ssssv.network.PreviewPayload
+import nl.eetgeenappels.ssssv.veinminer.Veinminer.isInToolList
 import org.apache.logging.log4j.core.jmx.Server
 
 object VeinminePreview {
@@ -23,26 +24,36 @@ object VeinminePreview {
             return
         }
 
-        var blocks = emptyList<BlockPos>()
+        val blocks: List<BlockPos> = if (isInToolList(player.mainHandItem.item).not()) {
+            emptyList()
+        } else {
+            getPreviewBlocks(player)
+        }
 
+        // send the blocks to the client
+        NetworkHandler.sendPreviewBlocks(player as ServerPlayer, PreviewPayload(blocks))
+    }
+
+    fun getPreviewBlocks(player: Player): List<BlockPos> {
+        val blocks = mutableListOf<BlockPos>()
         val targetedBlock = getTargetedBlock(player, 5.0)
         if (targetedBlock != null) {
             if (Veinminer.canVeinmineBlock(player.level().getBlockState(targetedBlock.blockPos).block ?: Blocks.AIR)) {
                 val blockPos = targetedBlock.blockPos
                 // Here you can add code to highlight the block at blockPos
                 // For example, send a packet to the client to render a highlight
-                val searchStrategy = Configs.ssssvConfig.searchSection.blockSearchMode.strategy
-                blocks = searchStrategy.search(
+                val searchStrategy = Configs.ssssvConfig.blockSearchMode.strategy
+                blocks.addAll (searchStrategy.search(
                     blockPos,
                     player.level().getBlockState(blockPos).block,
                     player.level(),
                     Configs.ssssvConfig.veinmineMaxBlocks.get()
-                )
+                ))
+                blocks.add(blockPos)
 
             }
         }
-        // send the blocks to the client
-        NetworkHandler.sendPreviewBlocks(player as ServerPlayer, PreviewPayload(blocks))
+        return blocks
     }
 
     fun getTargetedBlock(player: Player, maxDistance: Double = 5.0): BlockHitResult? {

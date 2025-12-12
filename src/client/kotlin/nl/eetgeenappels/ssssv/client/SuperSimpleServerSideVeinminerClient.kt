@@ -1,16 +1,10 @@
 package nl.eetgeenappels.ssssv.client
 
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.BufferBuilder
-import com.mojang.blaze3d.vertex.BufferUploader
-import com.mojang.blaze3d.vertex.DefaultVertexFormat
-import com.mojang.blaze3d.vertex.Tesselator
-import com.mojang.blaze3d.vertex.VertexFormat
 import me.fzzyhmstrs.fzzy_config.api.ConfigApi
 import me.fzzyhmstrs.fzzy_config.api.RegisterType
 import net.fabricmc.api.ClientModInitializer
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents
 import net.minecraft.client.renderer.GameRenderer
 import net.minecraft.core.BlockPos
 import net.minecraft.world.phys.AABB
@@ -36,10 +30,5 @@ object SuperSimpleServerSideVeinminerClient : ClientModInitializer {
 		ConfigApi.registerAndLoadConfig(::SSSSVConfig, RegisterType.BOTH)
 		//ConfigApi.registerAndLoadConfig(::SSSSVRenderConfig, RegisterType.CLIENT)
 
-
-		WorldRenderEvents.END.register(WorldRenderEvents.End { ctx: WorldRenderContext ->
-			BlockOutlineRenderer.renderBlockOutlines(ctx)
-
-		})
 	}
 }

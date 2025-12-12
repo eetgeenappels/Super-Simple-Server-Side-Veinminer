@@ -1,128 +1,138 @@
 package nl.eetgeenappels.ssssv.client.render
 
-import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.*
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext
-import net.minecraft.client.renderer.GameRenderer
+import com.mojang.blaze3d.pipeline.BlendFunction
+import com.mojang.blaze3d.pipeline.RenderPipeline
+import com.mojang.blaze3d.vertex.PoseStack
+import net.minecraft.client.Minecraft
+import net.minecraft.client.renderer.MultiBufferSource
+import net.minecraft.client.renderer.RenderPipelines
+import net.minecraft.client.renderer.rendertype.RenderSetup
+import net.minecraft.client.renderer.rendertype.RenderType
 import net.minecraft.core.BlockPos
-import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import nl.eetgeenappels.ssssv.client.SuperSimpleServerSideVeinminerClient
-import nl.eetgeenappels.ssssv.client.SuperSimpleServerSideVeinminerClient.cubes
 import nl.eetgeenappels.ssssv.client.config.ClientConfigs
-import nl.eetgeenappels.ssssv.client.config.SSSSVRenderConfig
+import nl.eetgeenappels.ssssv.client.mixin.RenderTypeAccessor
 import org.joml.Matrix4f
-import java.util.function.Supplier
 
-
+// credit goes to the Veinminer mod's highlight renderer is still don't understand how rendering works D:
 object BlockOutlineRenderer {
+    /**
+     * Render type for block highlighting.
+     *
+     * RenderType.create(namespace, bufferSize, pipeline, state)
+     */
 
-    fun renderBlockOutlines(ctx: WorldRenderContext) {
-        // Get camera position for relative rendering
-        val camera = ctx.camera().position
-        val poseStack = ctx.matrixStack()
+    // create render type
+    val renderType: RenderType
+        get() = RenderTypeAccessor.callCreate("outline_lines", RenderSetup.builder(
+            RenderPipeline.builder(*arrayOf(RenderPipelines.LINES_SNIPPET))
+                .withoutBlend()
+                .withLocation("pipeline/lines").build())
+            .createRenderSetup());
 
-        poseStack!!.pushPose()
 
-        RenderSystem.setShader { GameRenderer.getPositionColorShader() }
-        RenderSystem.lineWidth(ClientConfigs.ssssvRenderConfig.renderPreviewLineWidth.get().toFloat())
-        if (ClientConfigs.ssssvRenderConfig.renderPreviewThroughBlocks) {
-            RenderSystem.disableDepthTest()
-            RenderSystem.disableBlend()
-        } else {
-            RenderSystem.enableDepthTest()
-            RenderSystem.enableBlend()
+    // OrderedSubmitNodeCollector
+    fun render(stack: PoseStack,
+               source: MultiBufferSource.BufferSource,
+               camPos: Vec3,
+               isTranslucentPass: Boolean) {
+
+        if (SuperSimpleServerSideVeinminerClient.cubes.isEmpty())
+            return
+
+        if (!ClientConfigs.ssssvRenderConfig.previewsEnabled)
+            return
+
+        if (ClientConfigs.ssssvRenderConfig.holdShiftToPreview) {
+            val minecraft = Minecraft.getInstance()
+            val player = minecraft.player ?: return
+            if (!player.isShiftKeyDown) {
+                return
+            }
         }
-        RenderSystem.disableCull()
-        RenderSystem.defaultBlendFunc()
 
-        val bufferBuilder = Tesselator.getInstance().begin(
-            VertexFormat.Mode.DEBUG_LINES,
-            DefaultVertexFormat.POSITION_COLOR
-        )
 
-        poseStack.mulPose(ctx.camera().rotation().invert())
+        stack.pushPose()
 
-        // Get the matrix AFTER pushing
-        val matrix = poseStack.last().pose()
+        val matrix = stack.last().pose()
 
-        for (blockPos in cubes) {
-            drawCube(bufferBuilder, blockPos, matrix, camera)
+        renderBlocks(source, renderType, matrix, SuperSimpleServerSideVeinminerClient.cubes, camPos)
+
+        // Force draw the lines immediately
+        if (!isTranslucentPass) {
+            source.endBatch()
         }
-        // Adjust coordinates relative to camera
 
-
-        val buffer = bufferBuilder.build() ?: return
-
-        BufferUploader.drawWithShader(buffer)
-
-        poseStack.popPose()
-
-        RenderSystem.enableDepthTest()
-        RenderSystem.disableBlend()
-        RenderSystem.enableCull()
+        stack.popPose()
     }
 
-    fun drawCube(bufferBuilder: BufferBuilder ,blockPos: BlockPos, matrix: Matrix4f, camera: Vec3) {
 
-        val cube = AABB(
-            blockPos.x.toDouble(),
-            blockPos.y.toDouble(),
-            blockPos.z.toDouble(),
-            (blockPos.x + 1).toDouble(),
-            (blockPos.y + 1).toDouble(),
-            (blockPos.z + 1).toDouble()
+    // Render blocks directly without using VoxelShape edges
+    private fun renderBlocks(
+        source: MultiBufferSource.BufferSource,
+        renderer: RenderType,
+        matrix: Matrix4f,
+        positions: List<BlockPos>,
+        camPos: Vec3
+    ) {
+        val buffer = source.getBuffer(renderer)
+
+        // Define the 12 edges of a cube once
+        val edges = arrayOf(
+            // Bottom face
+            floatArrayOf(0f, 0f, 0f, 1f, 0f, 0f),
+            floatArrayOf(1f, 0f, 0f, 1f, 0f, 1f),
+            floatArrayOf(1f, 0f, 1f, 0f, 0f, 1f),
+            floatArrayOf(0f, 0f, 1f, 0f, 0f, 0f),
+            // Top face
+            floatArrayOf(0f, 1f, 0f, 1f, 1f, 0f),
+            floatArrayOf(1f, 1f, 0f, 1f, 1f, 1f),
+            floatArrayOf(1f, 1f, 1f, 0f, 1f, 1f),
+            floatArrayOf(0f, 1f, 1f, 0f, 1f, 0f),
+            // Vertical edges
+            floatArrayOf(0f, 0f, 0f, 0f, 1f, 0f),
+            floatArrayOf(1f, 0f, 0f, 1f, 1f, 0f),
+            floatArrayOf(1f, 0f, 1f, 1f, 1f, 1f),
+            floatArrayOf(0f, 0f, 1f, 0f, 1f, 1f)
         )
 
-        val minX = (cube.minX - camera.x).toFloat()
-        val minY = (cube.minY - camera.y).toFloat()
-        val minZ = (cube.minZ - camera.z).toFloat()
-        val maxX = (cube.maxX - camera.x).toFloat()
-        val maxY = (cube.maxY - camera.y).toFloat()
-        val maxZ = (cube.maxZ - camera.z).toFloat()
+        // Render each block's outline
+        for (pos in positions) {
+            val offsetX = (pos.x - camPos.x).toFloat()
+            val offsetY = (pos.y - camPos.y).toFloat()
+            val offsetZ = (pos.z - camPos.z).toFloat()
 
-        val red = ClientConfigs.ssssvRenderConfig.renderPreviewColor.r()
-        val green = ClientConfigs.ssssvRenderConfig.renderPreviewColor.g()
-        val blue = ClientConfigs.ssssvRenderConfig.renderPreviewColor.b()
-        val alpha = ClientConfigs.ssssvRenderConfig.renderPreviewColor.a()
+            // Draw all 12 edges
+            for (edge in edges) {
+                val x1 = edge[0]  + offsetX
+                val y1 = edge[1]  + offsetY
+                val z1 = edge[2]  + offsetZ
+                val x2 = edge[3] + offsetX
+                val y2 = edge[4] + offsetY
+                val z2 = edge[5] + offsetZ
 
-        // Bottom face (4 lines)
-        bufferBuilder.addVertex(matrix, minX, minY, minZ).setColor(red, green, blue, alpha)
-        bufferBuilder.addVertex(matrix, maxX, minY, minZ).setColor(red, green, blue, alpha)
+                val relX = x2 - x1
+                val relY = y2 - y1
+                val relZ = z2 - z1
 
-        bufferBuilder.addVertex(matrix, maxX, minY, minZ).setColor(red, green, blue, alpha)
-        bufferBuilder.addVertex(matrix, maxX, minY, maxZ).setColor(red, green, blue, alpha)
+                buffer.addVertex(matrix, x1, y1, z1)
+                    .setColor(ClientConfigs.ssssvRenderConfig.renderPreviewColor.r(),
+                        ClientConfigs.ssssvRenderConfig.renderPreviewColor.g(),
+                        ClientConfigs.ssssvRenderConfig.renderPreviewColor.b(),
+                        ClientConfigs.ssssvRenderConfig.renderPreviewColor.a())
+                    .setLineWidth(ClientConfigs.ssssvRenderConfig.renderPreviewLineWidth.get())
+                    .setNormal(relX, relY, relZ)
+                buffer.addVertex(matrix, x2, y2, z2)
+                    .setColor(ClientConfigs.ssssvRenderConfig.renderPreviewColor.r(),
+                        ClientConfigs.ssssvRenderConfig.renderPreviewColor.g(),
+                        ClientConfigs.ssssvRenderConfig.renderPreviewColor.b(),
+                        ClientConfigs.ssssvRenderConfig.renderPreviewColor.a())
+                    .setLineWidth(ClientConfigs.ssssvRenderConfig.renderPreviewLineWidth.get())
+                    .setNormal(relX, relY, relZ)
+            }
+        }
 
-        bufferBuilder.addVertex(matrix, maxX, minY, maxZ).setColor(red, green, blue, alpha)
-        bufferBuilder.addVertex(matrix, minX, minY, maxZ).setColor(red, green, blue, alpha)
-
-        bufferBuilder.addVertex(matrix, minX, minY, maxZ).setColor(red, green, blue, alpha)
-        bufferBuilder.addVertex(matrix, minX, minY, minZ).setColor(red, green, blue, alpha)
-
-        // Top face (4 lines)
-        bufferBuilder.addVertex(matrix, minX, maxY, minZ).setColor(red, green, blue, alpha)
-        bufferBuilder.addVertex(matrix, maxX, maxY, minZ).setColor(red, green, blue, alpha)
-
-        bufferBuilder.addVertex(matrix, maxX, maxY, minZ).setColor(red, green, blue, alpha)
-        bufferBuilder.addVertex(matrix, maxX, maxY, maxZ).setColor(red, green, blue, alpha)
-
-        bufferBuilder.addVertex(matrix, maxX, maxY, maxZ).setColor(red, green, blue, alpha)
-        bufferBuilder.addVertex(matrix, minX, maxY, maxZ).setColor(red, green, blue, alpha)
-
-        bufferBuilder.addVertex(matrix, minX, maxY, maxZ).setColor(red, green, blue, alpha)
-        bufferBuilder.addVertex(matrix, minX, maxY, minZ).setColor(red, green, blue, alpha)
-
-        // Vertical edges (4 lines)
-        bufferBuilder.addVertex(matrix, minX, minY, minZ).setColor(red, green, blue, alpha)
-        bufferBuilder.addVertex(matrix, minX, maxY, minZ).setColor(red, green, blue, alpha)
-
-        bufferBuilder.addVertex(matrix, maxX, minY, minZ).setColor(red, green, blue, alpha)
-        bufferBuilder.addVertex(matrix, maxX, maxY, minZ).setColor(red, green, blue, alpha)
-
-        bufferBuilder.addVertex(matrix, maxX, minY, maxZ).setColor(red, green, blue, alpha)
-        bufferBuilder.addVertex(matrix, maxX, maxY, maxZ).setColor(red, green, blue, alpha)
-
-        bufferBuilder.addVertex(matrix, minX, minY, maxZ).setColor(red, green, blue, alpha)
-        bufferBuilder.addVertex(matrix, minX, maxY, maxZ).setColor(red, green, blue, alpha)
+        source.endLastBatch()
     }
 }
