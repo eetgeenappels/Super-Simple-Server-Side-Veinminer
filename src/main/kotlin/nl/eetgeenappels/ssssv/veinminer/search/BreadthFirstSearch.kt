@@ -7,6 +7,7 @@ import net.minecraft.world.level.block.Block
 import nl.eetgeenappels.ssssv.config.Configs
 import java.util.LinkedList
 import java.util.Queue
+import kotlin.random.Random
 
 class BreadthFirstSearch: SearchStrategy {
     override fun search(
@@ -60,7 +61,7 @@ class BreadthFirstSearch: SearchStrategy {
             val neighbor = blockPos.relative(direction)
             neighbors.add(neighbor)
         }
-        return neighbors
+        return neighbors.shuffled(Random(blockPos.x+blockPos.y+blockPos.z))
     }
 
     fun getDiagonalNeighbours(blockPos: BlockPos): List<BlockPos> {
@@ -74,7 +75,7 @@ class BreadthFirstSearch: SearchStrategy {
                 }
             }
         }
-        return neighbors
+        return neighbors.shuffled(Random(blockPos.x+blockPos.y+blockPos.z))
     }
 
 }

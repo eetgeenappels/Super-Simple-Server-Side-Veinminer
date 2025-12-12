@@ -12,6 +12,7 @@ import nl.eetgeenappels.ssssv.config.Configs
 import nl.eetgeenappels.ssssv.config.SSSSVConfig
 import nl.eetgeenappels.ssssv.network.NetworkHandler
 import nl.eetgeenappels.ssssv.network.PreviewPayload
+import nl.eetgeenappels.ssssv.veinminer.Veinminer.isInToolList
 import org.apache.logging.log4j.core.jmx.Server
 
 object VeinminePreview {
@@ -23,8 +24,18 @@ object VeinminePreview {
             return
         }
 
-        val blocks = mutableListOf<BlockPos>()
+        val blocks: List<BlockPos> = if (isInToolList(player.mainHandItem.item).not()) {
+            emptyList()
+        } else {
+            getPreviewBlocks(player)
+        }
 
+        // send the blocks to the client
+        NetworkHandler.sendPreviewBlocks(player as ServerPlayer, PreviewPayload(blocks))
+    }
+
+    fun getPreviewBlocks(player: Player): List<BlockPos> {
+        val blocks = mutableListOf<BlockPos>()
         val targetedBlock = getTargetedBlock(player, 5.0)
         if (targetedBlock != null) {
             if (Veinminer.canVeinmineBlock(player.level().getBlockState(targetedBlock.blockPos).block ?: Blocks.AIR)) {
@@ -42,8 +53,7 @@ object VeinminePreview {
 
             }
         }
-        // send the blocks to the client
-        NetworkHandler.sendPreviewBlocks(player as ServerPlayer, PreviewPayload(blocks))
+        return blocks
     }
 
     fun getTargetedBlock(player: Player, maxDistance: Double = 5.0): BlockHitResult? {
