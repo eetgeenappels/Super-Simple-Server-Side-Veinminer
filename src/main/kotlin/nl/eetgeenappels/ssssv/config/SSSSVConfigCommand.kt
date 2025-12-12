@@ -8,8 +8,7 @@ import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands.*
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
-import net.minecraft.server.permissions.Permissions
+import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.Item
 import net.minecraft.world.level.block.Block
 import nl.eetgeenappels.ssssv.veinminer.search.SearchStrategies
@@ -21,7 +20,7 @@ object SSSSVConfigCommand {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.register(
                 literal("ssssv_config")
-                    .requires { it.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) }
+                    .requires {it.hasPermission(2) }
 
                     // Simple boolean toggles
                     .then(booleanCommand("veinmine_enabled") {
@@ -301,27 +300,27 @@ object SSSSVConfigCommand {
         ctx: CommandContext<CommandSourceStack>
     ): Block? {
         val name = StringArgumentType.getString(ctx, "block")
-        val block = BuiltInRegistries.BLOCK.get(Identifier.parse(name))
-
-        if (block.isEmpty) {
+        if (BuiltInRegistries.BLOCK.containsKey(ResourceLocation.parse(name)).not()) {
             ctx.source.sendFailure(Component.literal("Block '$name' not found"))
             return null
         }
+        val block = BuiltInRegistries.BLOCK.get(ResourceLocation.parse(name))
 
-        return block.get().value()
+        return block
     }
     private fun resolveItem(
         ctx: CommandContext<CommandSourceStack>
     ): Item? {
         val name = StringArgumentType.getString(ctx, "item")
-        val item = BuiltInRegistries.ITEM.get(Identifier.parse(name))
 
-        if (item.isEmpty) {
+        if (BuiltInRegistries.ITEM.containsKey(ResourceLocation.parse(name)).not()) {
             ctx.source.sendFailure(Component.literal("Item '$name' not found"))
             return null
         }
 
-        return item.get().value()
+        val item = BuiltInRegistries.ITEM.get(ResourceLocation .parse(name))
+
+        return item
     }
 
 }

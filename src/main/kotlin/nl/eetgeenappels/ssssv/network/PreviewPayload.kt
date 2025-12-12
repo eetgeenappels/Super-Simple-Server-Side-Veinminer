@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.network.codec.ByteBufCodecs
 import net.minecraft.network.codec.StreamCodec
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload
-import net.minecraft.resources.Identifier
+import net.minecraft.resources.ResourceLocation
 
 class PreviewPayload(val blocks: List<BlockPos>) : CustomPacketPayload {
 
@@ -16,7 +16,7 @@ class PreviewPayload(val blocks: List<BlockPos>) : CustomPacketPayload {
     companion object {
         val TYPE: CustomPacketPayload.Type<PreviewPayload> =
             CustomPacketPayload.Type(
-                Identifier.parse("ssssv:preview_payload")
+                ResourceLocation.parse("ssssv:preview_payload")
             )
 
         val CODEC: StreamCodec<ByteBuf, PreviewPayload> = StreamCodec.composite(
