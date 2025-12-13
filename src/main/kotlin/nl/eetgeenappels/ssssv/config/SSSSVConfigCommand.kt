@@ -9,8 +9,8 @@ import net.minecraft.commands.Commands.*
 import net.minecraft.core.registries.BuiltInRegistries
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.ResourceLocation
+import net.minecraft.world.item.Item
 import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.Blocks
 import nl.eetgeenappels.ssssv.veinminer.search.SearchStrategies
 
 object SSSSVConfigCommand {
@@ -20,20 +20,34 @@ object SSSSVConfigCommand {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.register(
                 literal("ssssv_config")
-                    .requires { it.hasPermission(2) }
+                    .requires {it.hasPermission(2) }
 
                     // Simple boolean toggles
                     .then(booleanCommand("veinmine_enabled") {
-                        Configs.ssssvConfig.veinmineEnabled = it
+                        Configs.ssssvConfig.veinmineEnabled.validateAndSet(it)
                     })
 
                     .then(booleanCommand("hold_shift_to_veinmine") {
-                        Configs.ssssvConfig.holdShiftToVeinmine = it
+                        Configs.ssssvConfig.holdShiftToVeinmine.validateAndSet(it)
                     })
 
-                    .then(booleanCommand("teleport_items_to_player") {
-                        Configs.ssssvConfig.teleportItemsToPlayer = it
+                    .then(booleanCommand("enable_in_creative_mode") {
+                        Configs.ssssvConfig.enableInCreativeMode.validateAndSet(it)
                     })
+
+                    .then(argument("collectionMode", StringArgumentType.string())
+                        .executes { ctx ->
+                            val name = StringArgumentType.getString(ctx, "collectionMode")
+                            val new = SSSSVConfig.CollectionModes.fromString(name)
+                            if (new != null) {
+                                Configs.ssssvConfig.collectionMode = new
+                                ctx.source.sendSystemMessage(Component.literal("Set collection mode to: $name"))
+                            } else {
+                                ctx.source.sendFailure(Component.literal("Collection mode '$name' not found"))
+                            }
+                            1
+                        }
+                    )
 
                     // Float configs
                     .then(floatCommand("durability_per_block", 0f, 2f) {
@@ -71,7 +85,7 @@ object SSSSVConfigCommand {
                                             val name = StringArgumentType.getString(ctx, "mode")
                                             val new = SearchStrategies.fromString(name)
                                             if (new != null) {
-                                                Configs.ssssvConfig.searchSection.blockSearchMode = new
+                                                Configs.ssssvConfig.blockSearchMode = new
                                                 ctx.source.sendSystemMessage(Component.literal("Set search mode to: $name"))
                                             } else {
                                                 ctx.source.sendFailure(Component.literal("Search mode '$name' not found"))
@@ -90,7 +104,7 @@ object SSSSVConfigCommand {
                             )
                             .then(
                                 booleanCommand("allow_diagonal") {
-                                    Configs.ssssvConfig.searchSection.allowDiagonalVeinmine = it
+                                    Configs.ssssvConfig.allowDiagonalVeinmine.validateAndSet(it)
                                 }
                             )
                     )
@@ -99,21 +113,32 @@ object SSSSVConfigCommand {
                     .then(
                         literal("blocks")
                             .then(booleanCommand("enable_whitelist") {
-                                Configs.ssssvConfig.blocksSection.blocksWhitelistEnbabled = it
+                                Configs.ssssvConfig.blocksWhitelistEnbabled.validateAndSet(it)
                             })
                             .then(booleanCommand("enable_blacklist") {
-                                Configs.ssssvConfig.blocksSection.blocksBlacklistEnabled = it
+                                Configs.ssssvConfig.blocksBlacklistEnabled = it
                             })
                             .then(blockListCommand("whitelist",
-                                { Configs.ssssvConfig.blocksSection.blocksWhitelist },
-                                { Configs.ssssvConfig.blocksSection.blocksWhitelist = it }
+                                { Configs.ssssvConfig.blocksWhitelist.get() },
+                                { Configs.ssssvConfig.blocksWhitelist.validateAndSet(it)}
                             ))
-
                             .then(blockListCommand("blacklist",
-                                { Configs.ssssvConfig.blocksSection.blocsBlacklist },
-                                { Configs.ssssvConfig.blocksSection.blocsBlacklist = it }
+                                { Configs.ssssvConfig.blocksBlacklist.get() },
+                                { Configs.ssssvConfig.blocksBlacklist.validateAndSet(it) }
                             ))
                     )
+
+                    .then(
+                        literal("tools")
+                            .then(booleanCommand("allow_all_tools") {
+                                Configs.ssssvConfig.allowAllTools.validateAndSet(it)
+                            })
+                            .then(itemListCommand("tool_list",
+                                { Configs.ssssvConfig.allowedTools.get() },
+                                { Configs.ssssvConfig.allowedTools.validateAndSet(it) }
+                            ))
+                    )
+
             )
         }
     }
@@ -166,7 +191,7 @@ object SSSSVConfigCommand {
             literal("add")
                 .then(argument("block", StringArgumentType.string())
                     .executes { ctx ->
-                        val block = resolveBlockOrFail(ctx) ?: return@executes 1
+                        val block = resolveBlock(ctx) ?: return@executes 1
                         val list = listGetter().toMutableList()
 
                         if (block in list) {
@@ -184,7 +209,7 @@ object SSSSVConfigCommand {
             literal("remove")
                 .then(argument("block", StringArgumentType.string())
                     .executes { ctx ->
-                        val block = resolveBlockOrFail(ctx) ?: return@executes 1
+                        val block = resolveBlock(ctx) ?: return@executes 1
                         val list = listGetter().toMutableList()
 
                         if (block in list) {
@@ -214,7 +239,64 @@ object SSSSVConfigCommand {
                 }
         )
 
-    private fun resolveBlockOrFail(
+    private fun itemListCommand(
+        name: String,
+        listGetter: () -> List<Item>,
+        listSetter: (List<Item>) -> Unit
+    ) = literal(name)
+        .then(
+            literal("add")
+                .then(argument("item", StringArgumentType.string())
+                    .executes { ctx ->
+                        val item = resolveItem(ctx) ?: return@executes 1
+                        val list = listGetter().toMutableList()
+
+                        if (item in list) {
+                            ctx.source.sendFailure(Component.literal("Item already in $name"))
+                        } else {
+                            list.add(item)
+                            listSetter(list)
+                            ctx.source.sendSystemMessage(Component.literal("Added item: ${StringArgumentType.getString(ctx, "item")}"))
+                        }
+                        1
+                    }
+                )
+        )
+        .then(
+            literal("remove")
+                .then(argument("block", StringArgumentType.string())
+                    .executes { ctx ->
+                        val block = resolveItem(ctx) ?: return@executes 1
+                        val list = listGetter().toMutableList()
+
+                        if (block in list) {
+                            list.remove(block)
+                            listSetter(list)
+                            ctx.source.sendSystemMessage(Component.literal("Removed block"))
+                        } else {
+                            ctx.source.sendFailure(Component.literal("Block not found in $name"))
+                        }
+                        1
+                    }
+                )
+        )
+        .then(
+            literal("list")
+                .executes { ctx ->
+                    val list = listGetter()
+                    val msg = if (list.isEmpty()) {
+                        "List is empty"
+                    } else {
+                        list.joinToString(", ") {
+                            BuiltInRegistries.ITEM.getKey(it).toString()
+                        }
+                    }
+                    ctx.source.sendSystemMessage(Component.literal(msg))
+                    1
+                }
+        )
+
+    private fun resolveBlock(
         ctx: CommandContext<CommandSourceStack>
     ): Block? {
         val name = StringArgumentType.getString(ctx, "block")
@@ -227,4 +309,18 @@ object SSSSVConfigCommand {
 
         return block.get().value()
     }
+    private fun resolveItem(
+        ctx: CommandContext<CommandSourceStack>
+    ): Item? {
+        val name = StringArgumentType.getString(ctx, "item")
+        val item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(name))
+
+        if (item.isEmpty) {
+            ctx.source.sendFailure(Component.literal("Item '$name' not found"))
+            return null
+        }
+
+        return item.get().value()
+    }
+
 }

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
 	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
@@ -26,6 +28,10 @@ repositories {
 		name = 'ParchmentMC'
 		url = 'https://maven.parchmentmc.org'
 	}
+    maven {
+        name = "Terraformers"
+        url = "https://maven.terraformersmc.com/"
+    }
 }
 
 loom {
@@ -54,6 +60,8 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
 	modImplementation("me.fzzyhmstrs:fzzy_config:$fzzyConfigVersion")
+
+    modRuntimeOnly("com.terraformersmc:modmenu:${project.modmenu_version}")
 }
 
 processResources {
@@ -68,10 +76,8 @@ tasks.withType(JavaCompile).configureEach {
 	it.options.release = 21
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-	kotlinOptions {
-		jvmTarget = 21
-	}
+kotlin {
+    jvmToolchain(21)
 }
 
 java {

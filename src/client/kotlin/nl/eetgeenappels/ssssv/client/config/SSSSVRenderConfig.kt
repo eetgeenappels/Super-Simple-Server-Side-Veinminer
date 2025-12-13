@@ -11,8 +11,8 @@ import java.awt.Color
 class SSSSVRenderConfig: Config(ResourceLocation.parse("ssssv:ssssv_render_config")) {
 
     var renderPreviewColor: ValidatedColor = ValidatedColor(0, 255, 0, 100)
-    var renderPreviewThroughBlocks: Boolean = true
-    var renderPreviewLineWidth: ValidatedInt = ValidatedInt(0, 20, 0)
+    //var renderPreviewThroughBlocks: Boolean = true
+    //var renderPreviewLineWidth: ValidatedInt = ValidatedInt(0, 20, 0)
 
 
     override fun fileType(): FileType {

@@ -4,31 +4,34 @@ import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.Item
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.Vec3
 import nl.eetgeenappels.ssssv.SuperSimpleServerSideVeinminer
 import nl.eetgeenappels.ssssv.config.Configs
+import nl.eetgeenappels.ssssv.config.SSSSVConfig
 
 object Veinminer {
 
     fun onBlockBreak(level: Level, player: Player, blockPos: BlockPos, blockState: BlockState, blockEntity: BlockEntity?) {
-        val config = Configs.ssssvConfig
-        if (!Configs.ssssvConfig.veinmineEnabled)
+        if (!Configs.ssssvConfig.veinmineEnabled.get())
             return
         if (level.isClientSide)
             return
-        if (level !is ServerLevel) {
+        if (level !is ServerLevel)
             return
-        }
         if (!canVeinmineBlock(blockState.block))
             return
-        if (Configs.ssssvConfig.holdShiftToVeinmine && !player.isShiftKeyDown)
+        if (!isInToolList(player.mainHandItem.item))
+            return
+        if (Configs.ssssvConfig.holdShiftToVeinmine.get() && !player.isShiftKeyDown)
             return
 
-        val searchStrategy = Configs.ssssvConfig.searchSection.blockSearchMode.strategy
+        val searchStrategy = Configs.ssssvConfig.blockSearchMode.strategy
         val blocksToMine = searchStrategy.search(
             blockPos,
             blockState.block,
@@ -47,11 +50,25 @@ object Veinminer {
 
             val drops = Block.getDrops(state, level, oreBlock, blockEntity)
             for (itemStack in drops) {
-                if (Configs.ssssvConfig.teleportItemsToPlayer) {
-                    val droppedItem = player.drop(itemStack, false)
-                    droppedItem?.setPos(player.x, player.y + 0.5, player.z)
-                } else {
-                    Block.popResource(level, oreBlock, itemStack)
+
+                when (Configs.ssssvConfig.collectionMode) {
+                    SSSSVConfig.CollectionModes.DROP_NORMALLY -> {
+                        Block.popResource(level, oreBlock, itemStack)
+                    }
+                    SSSSVConfig.CollectionModes.ADD_TO_INVENTORY_OR_DROP -> {
+                        val inventory = player.inventory
+
+                        if(inventory.freeSlot == -1){
+                            player.drop(itemStack, false)
+                        } else {
+                            inventory.add(itemStack)
+                        }
+                    }
+                    SSSSVConfig.CollectionModes.TELEPORT_TO_PLAYER -> {
+                        val droppedItem = player.drop(itemStack, false)
+                        droppedItem?.setPos(player.x, player.y + 0.5, player.z)
+                        droppedItem?.deltaMovement?.multiply(Vec3.ZERO)
+                    }
                 }
             }
 
@@ -71,17 +88,22 @@ object Veinminer {
     fun canVeinmineBlock(block: Block): Boolean {
         return isInWhitelist(block) && !isInBlacklist(block);
     }
-
+    fun isInToolList(item: Item): Boolean {
+        if (Configs.ssssvConfig.allowAllTools.get()) {
+            return true
+        }
+        return Configs.ssssvConfig.allowedTools.contains(item)
+    }
     fun isInWhitelist(block: Block): Boolean {
         val config = Configs.ssssvConfig
-        if (!config.blocksSection.blocksWhitelistEnbabled)
+        if (!config.blocksWhitelistEnbabled.get())
             return true
-        return config.blocksSection.blocksWhitelist.contains(block)
+        return config.blocksWhitelist.contains(block)
     }
     fun isInBlacklist(block: Block): Boolean {
         val config = Configs.ssssvConfig
-        if (!config.blocksSection.blocksBlacklistEnabled)
+        if (!config.blocksBlacklistEnabled)
             return false
-        return config.blocksSection.blocsBlacklist.contains(block)
+        return config.blocksBlacklist.contains(block)
     }
 }
