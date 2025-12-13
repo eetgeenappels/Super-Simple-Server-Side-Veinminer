@@ -32,7 +32,6 @@ object BlockOutlineRenderer {
             .createRenderSetup());
 
 
-    // OrderedSubmitNodeCollector
     fun render(stack: PoseStack,
                source: MultiBufferSource.BufferSource,
                camPos: Vec3,
@@ -61,7 +60,6 @@ object BlockOutlineRenderer {
     }
 
 
-    // Render blocks directly without using VoxelShape edges
     private fun renderBlocks(
         source: MultiBufferSource.BufferSource,
         renderer: RenderType,

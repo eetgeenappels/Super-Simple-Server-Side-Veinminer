@@ -41,8 +41,6 @@ object Veinminer {
             Configs.ssssvConfig.veinmineMaxBlocks.get()
         )
 
-        SuperSimpleServerSideVeinminer.logger.info("Veinmine found ${blocksToMine.size} blocks to mine.")
-
         for (oreBlock in blocksToMine) {
 
             if (oreBlock == blockPos)
