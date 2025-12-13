@@ -28,6 +28,8 @@ object Veinminer {
             return
         if (!isInToolList(player.mainHandItem.item))
             return
+        if (Configs.ssssvConfig.enableInCreativeMode.get() && player.isCreative)
+            return
         if (Configs.ssssvConfig.holdShiftToVeinmine.get() && !player.isShiftKeyDown)
             return
 
@@ -46,28 +48,33 @@ object Veinminer {
             if (oreBlock == blockPos)
                 continue // skip the original block, it's already being mined
 
-            val state = level.getBlockState(oreBlock)
+            if (!player.isCreative) {
 
-            val drops = Block.getDrops(state, level, oreBlock, blockEntity)
-            for (itemStack in drops) {
+                val state = level.getBlockState(oreBlock)
 
-                when (Configs.ssssvConfig.collectionMode) {
-                    SSSSVConfig.CollectionModes.DROP_NORMALLY -> {
-                        Block.popResource(level, oreBlock, itemStack)
-                    }
-                    SSSSVConfig.CollectionModes.ADD_TO_INVENTORY_OR_DROP -> {
-                        val inventory = player.inventory
+                val drops = Block.getDrops(state, level, oreBlock, blockEntity)
+                for (itemStack in drops) {
 
-                        if(inventory.freeSlot == -1){
-                            player.drop(itemStack, false)
-                        } else {
-                            inventory.add(itemStack)
+                    when (Configs.ssssvConfig.collectionMode) {
+                        SSSSVConfig.CollectionModes.DROP_NORMALLY -> {
+                            Block.popResource(level, oreBlock, itemStack)
                         }
-                    }
-                    SSSSVConfig.CollectionModes.TELEPORT_TO_PLAYER -> {
-                        val droppedItem = player.drop(itemStack, false)
-                        droppedItem?.setPos(player.x, player.y + 0.5, player.z)
-                        droppedItem?.deltaMovement?.multiply(Vec3.ZERO)
+
+                        SSSSVConfig.CollectionModes.ADD_TO_INVENTORY_OR_DROP -> {
+                            val inventory = player.inventory
+
+                            if (inventory.freeSlot == -1) {
+                                player.drop(itemStack, false)
+                            } else {
+                                inventory.add(itemStack)
+                            }
+                        }
+
+                        SSSSVConfig.CollectionModes.TELEPORT_TO_PLAYER -> {
+                            val droppedItem = player.drop(itemStack, false)
+                            droppedItem?.setPos(player.x, player.y + 0.5, player.z)
+                            droppedItem?.deltaMovement?.multiply(Vec3.ZERO)
+                        }
                     }
                 }
             }

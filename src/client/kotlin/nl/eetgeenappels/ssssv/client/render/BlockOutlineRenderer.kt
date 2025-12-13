@@ -44,13 +44,9 @@ object BlockOutlineRenderer {
         if (!ClientConfigs.ssssvRenderConfig.previewsEnabled)
             return
 
-        if (ClientConfigs.ssssvRenderConfig.holdShiftToPreview) {
-            val minecraft = Minecraft.getInstance()
-            val player = minecraft.player ?: return
-            if (!player.isShiftKeyDown) {
-                return
-            }
-        }
+        val minecraft = Minecraft.getInstance()
+        val player = minecraft.player ?: return
+
 
 
         stack.pushPose()
@@ -59,11 +55,8 @@ object BlockOutlineRenderer {
 
         renderBlocks(source, renderType, matrix, SuperSimpleServerSideVeinminerClient.cubes, camPos)
 
-        // Force draw the lines immediately
-        if (!isTranslucentPass) {
-            source.endBatch()
-        }
 
+        source.endBatch()
         stack.popPose()
     }
 

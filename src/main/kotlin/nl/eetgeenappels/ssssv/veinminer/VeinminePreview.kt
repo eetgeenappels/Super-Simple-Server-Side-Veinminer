@@ -24,10 +24,18 @@ object VeinminePreview {
             return
         }
 
-        val blocks: List<BlockPos> = if (isInToolList(player.mainHandItem.item).not()) {
-            emptyList()
+        val blocks: List<BlockPos>
+
+        if (isInToolList(player.mainHandItem.item).not()) {
+            blocks = emptyList()
+        } else if (Configs.ssssvConfig.veinmineEnabled.get().not()) {
+            blocks = emptyList()
+        } else if (Configs.ssssvConfig.enableInCreativeMode.get() && player.isCreative) {
+            blocks = emptyList()
+        } else if (Configs.ssssvConfig.holdShiftToVeinmine.get() && !player.isShiftKeyDown) {
+            blocks = emptyList()
         } else {
-            getPreviewBlocks(player)
+            blocks = getPreviewBlocks(player)
         }
 
         // send the blocks to the client
