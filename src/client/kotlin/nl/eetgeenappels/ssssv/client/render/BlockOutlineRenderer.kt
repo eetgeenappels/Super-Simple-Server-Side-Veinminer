@@ -42,25 +42,6 @@ object BlockOutlineRenderer {
                 .createCompositeState(false)
         )
 
-    private val renderHighlightingTranslucent
-        get() = RenderType.create(
-            "ssssv:highlight_translucent",
-            512,
-            RenderPipelines.register(
-                RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
-                    .withLocation(ResourceLocation.fromNamespaceAndPath("veinminer-client", "pipeline/highlight_translucent"))
-                    .withDepthWrite(true)
-                    .withCull(false)
-                    .withColorWrite(true, true)
-                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST) // Render always on top
-                    .build()
-            ),
-            RenderType.CompositeState.builder()
-                .setLineState(RenderStateShard.LineStateShard(OptionalDouble.of(1.0)))
-                .setLayeringState(RenderStateShard.LayeringStateShard.NO_LAYERING)
-                .createCompositeState(false)
-        )
-
 
     // OrderedSubmitNodeCollector
     fun render(stack: PoseStack,
@@ -75,10 +56,8 @@ object BlockOutlineRenderer {
         renderBlocks(source, renderHighlighting, matrix, SuperSimpleServerSideVeinminerClient.cubes, camPos)
 
 
-        // Force draw the lines immediately
-        if (!isTranslucentPass) {
-            source.endBatch(renderHighlighting)
-        }
+        source.endBatch(renderHighlighting)
+
 
         stack.popPose()
     }

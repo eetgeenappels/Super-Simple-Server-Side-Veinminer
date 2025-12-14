@@ -20,7 +20,7 @@ object SSSSVConfigCommand {
         CommandRegistrationCallback.EVENT.register { dispatcher, _, _ ->
             dispatcher.register(
                 literal("ssssv_config")
-                    .requires {it.hasPermission(2) }
+                    .requires { it.hasPermission(2) }
 
                     // Simple boolean toggles
                     .then(booleanCommand("veinmine_enabled") {
