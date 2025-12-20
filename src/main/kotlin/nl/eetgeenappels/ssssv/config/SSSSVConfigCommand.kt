@@ -25,7 +25,7 @@ object SSSSVConfigCommand {
 
                     // Simple boolean toggles
                     .then(booleanCommand("veinmine_enabled") {
-                        Configs.ssssvConfig.veinmineEnabled.validateAndSet(it)
+                        Configs.ssssvConfig.enabled.validateAndSet(it)
                     })
 
                     .then(booleanCommand("hold_shift_to_veinmine") {
@@ -65,7 +65,7 @@ object SSSSVConfigCommand {
                             .then(argument("amount", IntegerArgumentType.integer(1, 256))
                                 .executes { ctx ->
                                     val v = IntegerArgumentType.getInteger(ctx, "amount")
-                                    val ok = Configs.ssssvConfig.veinmineMaxBlocks.validateAndSet(v)
+                                    val ok = Configs.ssssvConfig.maxBlocks.validateAndSet(v)
                                     if (ok.isValid()) {
                                         ctx.source.sendSystemMessage(Component.literal("Set veinmine max blocks to: $v"))
                                     } else {

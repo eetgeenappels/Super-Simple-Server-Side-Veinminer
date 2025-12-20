@@ -1,7 +1,6 @@
 package nl.eetgeenappels.ssssv.veinminer
 
 import net.minecraft.core.BlockPos
-import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.Item
@@ -10,15 +9,17 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.entity.BlockEntity
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.storage.loot.LootParams
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams
 import net.minecraft.world.phys.Vec3
-import nl.eetgeenappels.ssssv.SuperSimpleServerSideVeinminer
 import nl.eetgeenappels.ssssv.config.Configs
 import nl.eetgeenappels.ssssv.config.SSSSVConfig
+
 
 object Veinminer {
 
     fun onBlockBreak(level: Level, player: Player, blockPos: BlockPos, blockState: BlockState, blockEntity: BlockEntity?) {
-        if (!Configs.ssssvConfig.veinmineEnabled.get())
+        if (!Configs.ssssvConfig.enabled.get())
             return
         if (level.isClientSide)
             return
@@ -28,7 +29,7 @@ object Veinminer {
             return
         if (!isInToolList(player.mainHandItem.item))
             return
-        if (Configs.ssssvConfig.enableInCreativeMode.get() && player.isCreative)
+        if (Configs.ssssvConfig.enableInCreativeMode.get() || player.isCreative)
             return
         if (Configs.ssssvConfig.holdShiftToVeinmine.get() && !player.isShiftKeyDown)
             return
@@ -38,7 +39,7 @@ object Veinminer {
             blockPos,
             blockState.block,
             player.level(),
-            Configs.ssssvConfig.veinmineMaxBlocks.get()
+            Configs.ssssvConfig.maxBlocks.get()
         )
 
         for (oreBlock in blocksToMine) {
@@ -50,7 +51,15 @@ object Veinminer {
 
                 val state = level.getBlockState(oreBlock)
 
-                val drops = Block.getDrops(state, level, oreBlock, blockEntity)
+                //val drops = Block.getDrops(state, level, oreBlock, blockEntity)
+
+                val builder = (LootParams.Builder(level)).withParameter(
+                    LootContextParams.ORIGIN,
+                    Vec3.atCenterOf(blockPos)
+                ).withParameter(LootContextParams.TOOL, player.mainHandItem)
+                    .withOptionalParameter(LootContextParams.BLOCK_ENTITY, blockEntity)
+                val drops = state.getDrops(builder)
+
                 for (itemStack in drops) {
 
                     when (Configs.ssssvConfig.collectionMode) {

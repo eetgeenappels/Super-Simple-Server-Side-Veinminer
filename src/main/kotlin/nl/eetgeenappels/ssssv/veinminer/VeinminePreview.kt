@@ -7,13 +7,10 @@ import net.minecraft.world.level.ClipContext
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
-import nl.eetgeenappels.ssssv.SuperSimpleServerSideVeinminer
 import nl.eetgeenappels.ssssv.config.Configs
-import nl.eetgeenappels.ssssv.config.SSSSVConfig
 import nl.eetgeenappels.ssssv.network.NetworkHandler
 import nl.eetgeenappels.ssssv.network.PreviewPayload
 import nl.eetgeenappels.ssssv.veinminer.Veinminer.isInToolList
-import org.apache.logging.log4j.core.jmx.Server
 
 object VeinminePreview {
 
@@ -28,7 +25,7 @@ object VeinminePreview {
 
         if (isInToolList(player.mainHandItem.item).not()) {
             blocks = emptyList()
-        } else if (Configs.ssssvConfig.veinmineEnabled.get().not()) {
+        } else if (Configs.ssssvConfig.enabled.get().not()) {
             blocks = emptyList()
         } else if (Configs.ssssvConfig.enableInCreativeMode.get() && player.isCreative) {
             blocks = emptyList()
@@ -55,7 +52,7 @@ object VeinminePreview {
                     blockPos,
                     player.level().getBlockState(blockPos).block,
                     player.level(),
-                    Configs.ssssvConfig.veinmineMaxBlocks.get()
+                    Configs.ssssvConfig.maxBlocks.get()
                 ))
                 blocks.add(blockPos)
 

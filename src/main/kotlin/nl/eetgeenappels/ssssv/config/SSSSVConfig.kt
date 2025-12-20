@@ -4,15 +4,12 @@ import me.fzzyhmstrs.fzzy_config.api.FileType
 import me.fzzyhmstrs.fzzy_config.api.SaveType
 import me.fzzyhmstrs.fzzy_config.config.Config
 import me.fzzyhmstrs.fzzy_config.config.ConfigGroup
-import me.fzzyhmstrs.fzzy_config.config.ConfigSection
-import me.fzzyhmstrs.fzzy_config.validation.ValidatedField
 import me.fzzyhmstrs.fzzy_config.validation.collection.ValidatedList
 import me.fzzyhmstrs.fzzy_config.validation.minecraft.ValidatedRegistryType
 import me.fzzyhmstrs.fzzy_config.validation.misc.ValidatedBoolean
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedFloat
 import me.fzzyhmstrs.fzzy_config.validation.number.ValidatedInt
 import net.minecraft.core.registries.BuiltInRegistries
-import net.minecraft.core.registries.Registries
 import net.minecraft.resources.Identifier
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
@@ -24,8 +21,8 @@ import nl.eetgeenappels.ssssv.veinminer.search.SearchStrategies
 class SSSSVConfig: Config(Identifier.parse("ssssv:server_side_config")) {
 
 
-    var veinmineEnabled: ValidatedBoolean = ValidatedBoolean(true)
-    var veinmineMaxBlocks: ValidatedInt = ValidatedInt(32, 256, 1)
+    var enabled: ValidatedBoolean = ValidatedBoolean(true)
+    var maxBlocks: ValidatedInt = ValidatedInt(32, 256, 1)
     var holdShiftToVeinmine: ValidatedBoolean = ValidatedBoolean(true)
     var collectionMode: CollectionModes = CollectionModes.DROP_NORMALLY
     var enableInCreativeMode: ValidatedBoolean = ValidatedBoolean(false)
